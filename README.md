@@ -24,7 +24,7 @@ A single Unity Catalog schema with seven Delta tables.
 |---|---|---|---|
 | 1 | `1_vehicle_master` | ~5,000 | Vehicle static attributes — make, model, age, fuel, market value |
 | 2 | `2_damage_assessment` | ~12,000 | Damage events with severity, repair-cost estimate and the headline `repair_cost_ratio` feature |
-| 3 | `3_maintenance_history` | ~28,000 | Routine + unscheduled service history per vehicle |
+| 3 | `3_maintenance_history` | ~60,000 | Routine + unscheduled service history per vehicle |
 | 4 | `4_incident_details` | ~12,000 | Incident narratives + impacted-parts list (good fodder for `ai_query` extraction demos) |
 | 5 | `5_repair_replace_decisions` | ~12,000 | **Labelled decisions** with downstream outcomes (recurrence, salvage, replacement cost) |
 | 6 | `6_regional_cost_factors` | 9 | Country labour rate, parts cost multiplier, lead time |
@@ -37,7 +37,7 @@ A single Unity Catalog schema with seven Delta tables.
 * **Damage events:** 12,000 covering 24 months
 * **Incident types:** Collision, Mechanical, Theft/Vandalism, Weather, Flood, Fire, Wear & tear
 * **Severity bands:** Minor / Moderate / Severe / Critical
-* **Decision label balance:** ~60% Repair / ~40% Replace (by design — varies with age and severity)
+* **Decision label balance:** ~80% Repair / ~20% Replace (post-flip; varies with age and severity)
 * **Assessor inconsistency baked in:** ~12% of decisions diverge from the rule-based baseline — exactly the noise an ML model should learn to clean up
 
 ---
