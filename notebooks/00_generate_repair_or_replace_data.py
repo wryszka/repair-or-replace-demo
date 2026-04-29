@@ -2,46 +2,83 @@
 # MAGIC %md
 # MAGIC # Fleet Repair-or-Replace Decision Demo — Synthetic Data Generator
 # MAGIC
-# MAGIC Generates a realistic, ML-ready synthetic dataset for a fleet management /
-# MAGIC insurance company faced with the question: **when a vehicle is damaged, should
-# MAGIC we repair it or replace it?**
+# MAGIC ## ▶️ Please run this notebook first to generate the datasets
+# MAGIC
+# MAGIC Open the notebook, set `CATALOG` and `SCHEMA` in the configuration cell
+# MAGIC below, and click **Run all**. Everything is generated locally with
+# MAGIC `numpy` + `pandas` and written to Unity Catalog as Delta tables — no
+# MAGIC cluster libraries or external dependencies needed.
+# MAGIC
+# MAGIC ---
+# MAGIC
+# MAGIC ## 🎯 How to use the dataset
+# MAGIC
+# MAGIC The problem statement only describes **two tables** — `vehicle_master`
+# MAGIC and `damage_assessment`. Pick your difficulty:
+# MAGIC
+# MAGIC * **Standard path** — use only `1_vehicle_master` and `2_damage_assessment`.
+# MAGIC   These two tables are sufficient to build a working repair-vs-replace
+# MAGIC   classifier and answer the core business question.
+# MAGIC * **Brave path** — bring in the additional tables (`3_maintenance_history`,
+# MAGIC   `4_incident_details`, `5_repair_replace_decisions`, `6_regional_cost_factors`,
+# MAGIC   `7_parts_catalogue`) for a richer feature set: historical service signal,
+# MAGIC   incident narratives for LLM extraction, regional cost variation, and a
+# MAGIC   labelled outcome table with downstream recurrence flags.
+# MAGIC
+# MAGIC Both paths use the same primary keys (`vehicle_id`, `assessment_id`) so
+# MAGIC the brave path is purely additive — start with two and add the rest when
+# MAGIC you're ready.
+# MAGIC
+# MAGIC ---
 # MAGIC
 # MAGIC ### About this demo
 # MAGIC All data in this notebook is **synthetic**. Vehicle IDs, registration
-# MAGIC numbers, driver IDs, prices and labour rates are generated procedurally with
-# MAGIC `numpy` + Python's `random` module. No customer or employee data is used.
-# MAGIC The notebook is intended for demonstration of Databricks features
+# MAGIC numbers, driver IDs, prices and labour rates are generated procedurally
+# MAGIC with `numpy` + Python's `random` module. No customer or employee data is
+# MAGIC used. The notebook is intended for demonstration of Databricks features
 # MAGIC (Lakeflow, Unity Catalog, Genie, Mosaic AI) and as a starting point for
 # MAGIC building repair-vs-replace classification models.
 # MAGIC
-# MAGIC ### What gets created
-# MAGIC A single Unity Catalog schema with seven Delta tables:
+# MAGIC ### Tables created
 # MAGIC
-# MAGIC | # | Table | Rows | Description |
-# MAGIC |---|---|---|---|
-# MAGIC | 1 | `1_vehicle_master` | ~5,000 | Static vehicle attributes |
-# MAGIC | 2 | `2_damage_assessment` | ~12,000 | Damage events and repair estimates |
-# MAGIC | 3 | `3_maintenance_history` | ~28,000 | Past services and repairs |
-# MAGIC | 4 | `4_incident_details` | ~12,000 | Per-assessment incident narrative + parts breakdown |
-# MAGIC | 5 | `5_repair_replace_decisions` | ~12,000 | Historical decision label + downstream outcome |
-# MAGIC | 6 | `6_regional_cost_factors` | 9 | Country labour & parts multipliers |
-# MAGIC | 7 | `7_parts_catalogue` | ~120 | Parts master with EUR prices and lead times |
+# MAGIC | # | Table | Rows | Required? | Description |
+# MAGIC |---|---|---|---|---|
+# MAGIC | 1 | `1_vehicle_master` | ~5,000 | **Yes (standard)** | Static vehicle attributes |
+# MAGIC | 2 | `2_damage_assessment` | ~12,000 | **Yes (standard)** | Damage events and repair estimates |
+# MAGIC | 3 | `3_maintenance_history` | ~60,000 | Optional (brave) | Past services and repairs |
+# MAGIC | 4 | `4_incident_details` | ~12,000 | Optional (brave) | Per-assessment incident narrative + parts breakdown |
+# MAGIC | 5 | `5_repair_replace_decisions` | ~12,000 | Optional (brave) | Historical decision label + downstream outcome |
+# MAGIC | 6 | `6_regional_cost_factors` | 9 | Optional (brave) | Country labour & parts multipliers |
+# MAGIC | 7 | `7_parts_catalogue` | ~120 | Optional (brave) | Parts master with EUR prices and lead times |
 
 # COMMAND ----------
 
 # MAGIC %md ## 1. Configuration
 # MAGIC
-# MAGIC To run this notebook against a different catalog, edit the `CATALOG`
-# MAGIC variable below — everything else is portable.
+# MAGIC **➡️ Edit the two variables below before running.**
+# MAGIC
+# MAGIC * `CATALOG` — defaults to `dbacademy` (the standard training catalog).
+# MAGIC   **Replace this with your own Unity Catalog** if you're not on the
+# MAGIC   training environment (e.g. `main`, `users`, your workspace catalog).
+# MAGIC * `SCHEMA` — defaults to `<your_initial>_repair_or_replace`.
+# MAGIC   **Replace `<your_initial>` with your initials** so multiple participants
+# MAGIC   can run this notebook in the same catalog without overwriting each
+# MAGIC   other's tables (e.g. `lr_repair_or_replace`, `jdoe_repair_or_replace`).
 
 # COMMAND ----------
 
-CATALOG = "lr_serverless_aws_us_catalog"
-SCHEMA = "repair_or_replace"
+# 👇 EDIT THESE TWO LINES 👇
+CATALOG = "dbacademy"                          # ← replace with your real catalog
+SCHEMA  = "<your_initial>_repair_or_replace"   # ← replace <your_initial> with your initials
 
 N_VEHICLES = 5000
 N_ASSESSMENTS = 12000
 SEED = 42
+
+assert "<your_initial>" not in SCHEMA, (
+    "Please replace <your_initial> in the SCHEMA variable with your initials "
+    "(e.g. 'lr_repair_or_replace') so you don't collide with other participants."
+)
 
 # COMMAND ----------
 
